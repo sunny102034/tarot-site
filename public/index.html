@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>靈語塔羅 — AI 塔羅占卜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=DM+Serif+Display:ital@0;1&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #f5f0e8;
+    --warm-white: #faf8f4;
+    --ink: #1a1714;
+    --dust: #8c7f72;
+    --sage: #9aaa96;
+    --blush: #c9a99a;
+    --terracotta: #b87058;
+    --gold: #c4a45a;
+    --mist: #e8e2d9;
+    --paper: #efe9de;
+    --accent-line: #d4c9b8;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Serif TC', serif;
+    background: var(--warm-white);
+    color: var(--ink);
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ── GRAIN OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.4rem 3rem;
+    background: rgba(250, 248, 244, 0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--accent-line);
+  }
+
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.35rem;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .nav-logo span {
+    font-style: italic;
+    color: var(--terracotta);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.2rem;
+    list-style: none;
+  }
+  .nav-btn {
+    background: none;
+    border: none;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    color: var(--dust);
+    cursor: pointer;
+    transition: color 0.3s;
+    padding: 0;
+  }
+  .nav-btn:hover { color: var(--ink); }
+
+  .mobile-menu-link {
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--accent-line);
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    padding-bottom: 1rem;
+    transition: color 0.3s;
+    width: 100%;
+  }
+  .mobile-menu-link:hover { color: var(--terracotta); }
+
+  .nav-cta {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    padding: 0.55rem 1.4rem;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    text-decoration: none;
+    transition: all 0.3s;
+    background: transparent;
+  }
+  .nav-cta:hover {
+    background: var(--ink);
+    color: var(--warm-white);
+  }
+
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+  }
+  .hamburger span {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: var(--ink);
+    transition: all 0.3s;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 8rem 5rem 5rem;
+    gap: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    right: -8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 55vw;
+    height: 55vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(154,170,150,0.13) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-text { position: relative; z-index: 2; }
+
+  .hero-eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    color: var(--sage);
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 30px;
+    height: 1px;
+    background: var(--sage);
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.8rem, 5vw, 4.2rem);
+    line-height: 1.15;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 1.6rem;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--terracotta);
+  }
+
+  .hero-desc {
+    font-size: 0.92rem;
+    line-height: 1.9;
+    color: var(--dust);
+    max-width: 420px;
+    margin-bottom: 2.8rem;
+    font-weight: 300;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.9rem 2rem;
+    background: var(--ink);
+    color: var(--warm-white);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    border: 1px solid var(--ink);
+    transition: all 0.35s;
+  }
+  .btn-primary:hover {
+    background: var(--terracotta);
+    border-color: var(--terracotta);
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.9rem 2rem;
+    background: transparent;
+    color: var(--ink);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    border: 1px solid var(--accent-line);
+    transition: all 0.35s;
+  }
+  .btn-secondary:hover {
+    border-color: var(--ink);
+    background: var(--mist);
+  }
+
+  /* ── HERO CARDS ── */
+  .hero-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    height: 520px;
+    z-index: 2;
+  }
+
+  .card-stack {
+    position: relative;
+    width: 180px;
+    height: 320px;
+  }
+
+  .tarot-card {
+    position: absolute;
+    width: 160px;
+    height: 280px;
+    border-radius: 6px;
+    background: var(--cream);
+    border: 1px solid var(--accent-line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 4px 8px 32px rgba(26,23,20,0.1);
+    transition: transform 0.5s ease;
+  }
+
+  .tarot-card:nth-child(1) {
+    transform: rotate(-12deg) translate(-60px, 20px);
+    background: linear-gradient(145deg, #e8e2d9, #ddd5c6);
+    animation: float1 6s ease-in-out infinite;
+  }
+  .tarot-card:nth-child(2) {
+    transform: rotate(6deg) translate(50px, -10px);
+    background: linear-gradient(145deg, #ede7dc, #e2dbd0);
+    animation: float2 7s ease-in-out infinite;
+  }
+  .tarot-card:nth-child(3) {
+    transform: rotate(-2deg);
+    background: linear-gradient(145deg, var(--cream), #ede7dc);
+    animation: float3 8s ease-in-out infinite;
+    z-index: 3;
+  }
+
+  @keyframes float1 { 0%,100%{transform:rotate(-12deg) translate(-60px,20px)} 50%{transform:rotate(-10deg) translate(-60px,10px)} }
+  @keyframes float2 { 0%,100%{transform:rotate(6deg) translate(50px,-10px)} 50%{transform:rotate(8deg) translate(50px,-20px)} }
+  @keyframes float3 { 0%,100%{transform:rotate(-2deg)} 50%{transform:rotate(-1deg) translateY(-8px)} }
+
+  .card-inner {
+    width: 80%;
+    height: 80%;
+    border: 1px solid var(--accent-line);
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-inner::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(196,164,90,0.3);
+    border-radius: 2px;
+  }
+
+  .card-symbol {
+    font-size: 2.2rem;
+    opacity: 0.7;
+  }
+
+  .card-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--dust);
+    text-transform: uppercase;
+  }
+
+  .card-roman {
+    font-family: 'DM Serif Display', serif;
+    font-size: 0.6rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── DIVIDER ── */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 5rem;
+    margin-bottom: 1rem;
+  }
+  .section-divider::before, .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--accent-line);
+  }
+  .section-divider-icon {
+    font-size: 0.9rem;
+    color: var(--gold);
+    letter-spacing: 0.2em;
+  }
+
+  /* ── SECTION ── */
+  section {
+    padding: 6rem 5rem;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.26em;
+    color: var(--sage);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 400;
+    line-height: 1.3;
+    margin-bottom: 1.2rem;
+  }
+  .section-title em { font-style: italic; color: var(--terracotta); }
+  .section-desc {
+    font-size: 0.88rem;
+    line-height: 1.9;
+    color: var(--dust);
+    max-width: 520px;
+    font-weight: 300;
+  }
+
+  /* ── FEATURES GRID ── */
+  .features-section { background: var(--paper); }
+
+  .features-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: end;
+    margin-bottom: 4rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5px;
+    background: var(--accent-line);
+    border: 1px solid var(--accent-line);
+  }
+
+  .feature-item {
+    background: var(--paper);
+    padding: 2.4rem 2rem;
+    transition: background 0.3s;
+  }
+  .feature-item:hover { background: var(--cream); }
+
+  .feature-icon {
+    font-size: 1.6rem;
+    margin-bottom: 1.2rem;
+    display: block;
+  }
+  .feature-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-bottom: 0.7rem;
+    color: var(--ink);
+  }
+  .feature-desc {
+    font-size: 0.82rem;
+    line-height: 1.85;
+    color: var(--dust);
+    font-weight: 300;
+  }
+
+  /* ── SERVICES ── */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 3.5rem;
+  }
+
+  .service-card {
+    cursor: pointer;
+    border: 1px solid var(--accent-line);
+    padding: 2rem 2.2rem;
+    position: relative;
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--warm-white);
+    transition: all 0.35s;
+    display: block;
+    overflow: hidden;
+  }
+  .service-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--terracotta);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s;
+  }
+  .service-card:hover::before { transform: scaleX(1); }
+  .service-card:hover { background: var(--cream); }
+
+  .service-tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--sage);
+    text-transform: uppercase;
+    margin-bottom: 0.7rem;
+  }
+  .service-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    margin-bottom: 0.6rem;
+  }
+  .service-desc {
+    font-size: 0.82rem;
+    line-height: 1.8;
+    color: var(--dust);
+    font-weight: 300;
+  }
+  .service-arrow {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    font-size: 1rem;
+    color: var(--blush);
+    transition: transform 0.3s;
+  }
+  .service-card:hover .service-arrow { transform: translate(3px, -3px); }
+
+  /* ── FORTUNE ── */
+  .fortune-section { background: var(--ink); color: var(--cream); position: relative; overflow: hidden; }
+  .fortune-section::before {
+    content: '운명';
+    position: absolute;
+    right: -2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 22rem;
+    color: rgba(255,255,255,0.03);
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .fortune-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3.5rem; flex-wrap: wrap; gap: 1.5rem; }
+  .fortune-section .section-label { color: var(--sage); }
+  .fortune-section .section-title { color: var(--cream); }
+  .fortune-section .section-desc { color: rgba(245,240,232,0.6); }
+
+  .fortune-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .fortune-item {
+    cursor: pointer;
+    background: var(--ink);
+    padding: 2.2rem 1.8rem;
+    border-bottom: 2px solid transparent;
+    transition: all 0.35s;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    color: inherit;
+  }
+  .fortune-item:hover {
+    background: rgba(255,255,255,0.05);
+    border-bottom-color: var(--gold);
+  }
+
+  .fortune-period {
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .fortune-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: var(--cream);
+    margin-bottom: 0.5rem;
+  }
+  .fortune-desc {
+    font-size: 0.78rem;
+    line-height: 1.75;
+    color: rgba(245,240,232,0.5);
+    font-weight: 300;
+  }
+
+  /* ── READERS ── */
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--dust);
+    font-weight: 300;
+  }
+
+  /* ── ASK SECTION ── */
+  .ask-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    min-height: 50vh;
+    padding: 0;
+  }
+
+  .ask-left {
+    background: var(--paper);
+    padding: 6rem 5rem;
+  }
+  .ask-right {
+    background: var(--mist);
+    padding: 6rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .ask-input-wrapper {
+    position: relative;
+    margin-top: 2rem;
+  }
+
+  .ask-textarea {
+    width: 100%;
+    height: 120px;
+    padding: 1.2rem;
+    border: 1px solid var(--accent-line);
+    background: var(--warm-white);
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.85rem;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    line-height: 1.8;
+    transition: border-color 0.3s;
+  }
+  .ask-textarea::placeholder { color: var(--dust); opacity: 0.6; }
+  .ask-textarea:focus { border-color: var(--terracotta); }
+
+  .ask-submit {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .char-count { font-size: 0.72rem; color: var(--dust); letter-spacing: 0.08em; }
+  .submit-btn {
+    padding: 0.8rem 1.8rem;
+    background: var(--terracotta);
+    color: var(--warm-white);
+    border: none;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .submit-btn:hover { background: var(--ink); }
+
+  .ask-hint {
+    margin-top: 1.8rem;
+    padding: 1.2rem;
+    border-left: 2px solid var(--blush);
+    background: var(--cream);
+  }
+  .ask-hint p {
+    font-size: 0.78rem;
+    line-height: 1.8;
+    color: var(--dust);
+    font-weight: 300;
+  }
+  .ask-hint strong { color: var(--terracotta); font-weight: 400; }
+
+  .example-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 2rem;
+  }
+  .example-q {
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--accent-line);
+    background: var(--warm-white);
+    font-size: 0.8rem;
+    color: var(--dust);
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .example-q:hover {
+    border-color: var(--terracotta);
+    color: var(--ink);
+    background: var(--cream);
+  }
+
+  /* ── FAQ ── */
+  .faq-section { background: var(--warm-white); }
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-top: 3.5rem;
+    align-items: start;
+  }
+
+  .faq-list { display: flex; flex-direction: column; gap: 0; }
+
+  .faq-item {
+    border-bottom: 1px solid var(--accent-line);
+    overflow: hidden;
+  }
+  .faq-q {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1.4rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.87rem;
+    color: var(--ink);
+    gap: 1rem;
+  }
+  .faq-q:hover { color: var(--terracotta); }
+  .faq-icon { font-size: 1rem; color: var(--blush); flex-shrink: 0; transition: transform 0.3s; }
+  .faq-item.open .faq-icon { transform: rotate(45deg); }
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+  }
+  .faq-item.open .faq-a { max-height: 200px; }
+  .faq-a p {
+    padding-bottom: 1.4rem;
+    font-size: 0.82rem;
+    line-height: 1.9;
+    color: var(--dust);
+    font-weight: 300;
+  }
+
+  .faq-right {
+    background: var(--paper);
+    border: 1px solid var(--accent-line);
+    padding: 2.8rem;
+  }
+  .faq-right .section-label { margin-bottom: 1rem; }
+  .faq-right h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+  .faq-right p {
+    font-size: 0.82rem;
+    line-height: 1.9;
+    color: var(--dust);
+    font-weight: 300;
+    margin-bottom: 2rem;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 4rem 5rem 2.5rem;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 3rem;
+    padding-bottom: 3rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 2.5rem;
+  }
+
+  .footer-brand p {
+    font-size: 0.8rem;
+    line-height: 1.85;
+    color: rgba(245,240,232,0.5);
+    font-weight: 300;
+    margin-top: 1rem;
+    max-width: 280px;
+  }
+
+  .footer-col h4 {
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    color: var(--sage);
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+  .footer-col a {
+    font-size: 0.8rem;
+    color: rgba(245,240,232,0.5);
+    text-decoration: none;
+    font-weight: 300;
+    transition: color 0.3s;
+  }
+  .footer-col a:hover { color: var(--cream); }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .footer-bottom p { font-size: 0.72rem; color: rgba(245,240,232,0.3); letter-spacing: 0.08em; }
+  .footer-lang {
+    display: flex;
+    gap: 1rem;
+  }
+  .footer-lang a {
+    font-size: 0.72rem;
+    color: rgba(245,240,232,0.35);
+    text-decoration: none;
+    letter-spacing: 0.06em;
+    transition: color 0.3s;
+  }
+  .footer-lang a:hover { color: var(--cream); }
+
+  /* ── MOBILE MENU ── */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--warm-white);
+    z-index: 99;
+    padding: 6rem 3rem 3rem;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .mobile-menu.active { display: flex; }
+  .mobile-menu a {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 400;
+    transition: color 0.3s;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--accent-line);
+  }
+  .mobile-menu a:hover { color: var(--terracotta); }
+  .menu-close {
+    position: absolute;
+    top: 1.4rem;
+    right: 3rem;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--ink);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up {
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards;
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.35s; }
+  .delay-4 { animation-delay: 0.5s; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1024px) {
+    nav { padding: 1.2rem 2rem; }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+
+    .hero { grid-template-columns: 1fr; padding: 7rem 2.5rem 4rem; gap: 3rem; text-align: center; }
+    .hero::after { display: none; }
+    .hero-desc { margin: 0 auto 2.5rem; }
+    .hero-actions { justify-content: center; }
+    .hero-eyebrow { justify-content: center; }
+    .hero-visual { height: 320px; }
+    .card-stack { width: 140px; height: 240px; }
+    .tarot-card { width: 120px; height: 210px; }
+    .tarot-card:nth-child(1) { transform: rotate(-12deg) translate(-45px, 15px); }
+    .tarot-card:nth-child(2) { transform: rotate(6deg) translate(38px, -8px); }
+
+    section { padding: 5rem 2.5rem; }
+    .section-divider { padding: 0 2.5rem; }
+
+    .features-header { grid-template-columns: 1fr; gap: 1.5rem; }
+    .features-grid { grid-template-columns: 1fr 1fr; }
+
+    .fortune-grid { grid-template-columns: 1fr 1fr; }
+
+
+    .ask-section { grid-template-columns: 1fr; }
+    .ask-left, .ask-right { padding: 4rem 2.5rem; }
+
+    .faq-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+
+    .footer-top { grid-template-columns: 1fr 1fr; gap: 2rem; }
+    footer { padding: 3rem 2.5rem 2rem; }
+
+    .services-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-cta { display: none; }
+
+    .hero { padding: 6rem 1.5rem 3rem; }
+    section { padding: 4rem 1.5rem; }
+    .section-divider { padding: 0 1.5rem; }
+
+    .features-grid { grid-template-columns: 1fr; }
+    .fortune-grid { grid-template-columns: 1fr 1fr; }
+
+    .ask-left, .ask-right { padding: 3rem 1.5rem; }
+
+    .footer-top { grid-template-columns: 1fr; }
+    .footer-bottom { flex-direction: column; text-align: center; }
+    footer { padding: 3rem 1.5rem 2rem; }
+
+    .hero-visual { height: 280px; }
+  }
+  .fortune-cta {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: var(--gold);
+    margin-top: 1rem;
+    transition: letter-spacing 0.3s;
+  }
+  .fortune-item:hover .fortune-cta { letter-spacing: 0.22em; }
+
+  #fortuneModal { scrollbar-width: thin; }
+  @keyframes modalIn {
+    from { opacity:0; transform: translateY(20px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  #fortunePanel { animation: modalIn 0.35s ease; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">靈<span>語</span>塔羅</span>
+  <ul class="nav-links">
+    <li><button class="nav-btn" onclick="scrollToSection('services')">占卜服務</button></li>
+    <li><button class="nav-btn" onclick="scrollToSection('fortune')">運勢</button></li>
+    <li><button class="nav-btn" onclick="scrollToSection('ask')">免費占卜</button></li>
+    <li><button class="nav-btn" onclick="scrollToSection('faq')">常見問題</button></li>
+  </ul>
+  <button class="nav-cta" onclick="scrollToSection('ask')">立即占卜</button>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="選單">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="menu-close" onclick="toggleMenu()">✕</button>
+  <button class="mobile-menu-link" onclick="scrollToSection('services');toggleMenu()">占卜服務</button>
+  <button class="mobile-menu-link" onclick="scrollToSection('fortune');toggleMenu()">運勢</button>
+  <button class="mobile-menu-link" onclick="scrollToSection('ask');toggleMenu()">免費占卜</button>
+  <button class="mobile-menu-link" onclick="scrollToSection('faq');toggleMenu()">常見問題</button>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <p class="hero-eyebrow fade-up">AI 塔羅占卜平台</p>
+    <h1 class="fade-up delay-1">
+      聆聽<em>牌</em>語，<br>尋找內心<br>的答案
+    </h1>
+    <p class="hero-desc fade-up delay-2">
+      結合 AI 與塔羅的智慧，為你解讀愛情、事業、人生方向。<br>
+      無需註冊，免費開始你的靈性探索旅程。
+    </p>
+    <div class="hero-actions fade-up delay-3">
+      <button class="btn-primary" onclick="scrollToSection('ask')">✦ 立即免費占卜</button>
+      <button class="btn-secondary" onclick="scrollToSection('services')">探索服務 →</button>
+    </div>
+  </div>
+
+  <div class="hero-visual fade-up delay-2">
+    <div class="card-stack">
+      <div class="tarot-card">
+        <div class="card-inner">
+          <span class="card-symbol">☽</span>
+          <span class="card-roman">XVIII</span>
+          <span class="card-name">月亮</span>
+        </div>
+      </div>
+      <div class="tarot-card">
+        <div class="card-inner">
+          <span class="card-symbol">☀</span>
+          <span class="card-roman">XIX</span>
+          <span class="card-name">太陽</span>
+        </div>
+      </div>
+      <div class="tarot-card">
+        <div class="card-inner">
+          <span class="card-symbol">★</span>
+          <span class="card-roman">XVII</span>
+          <span class="card-name">星星</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider">
+  <span class="section-divider-icon">✦ ✦ ✦</span>
+</div>
+
+<!-- FEATURES -->
+<section class="features-section" id="services">
+  <div class="features-header">
+    <div>
+      <p class="section-label">為何選擇我們</p>
+      <h2 class="section-title">與其他塔羅<em>不同</em>的地方</h2>
+    </div>
+    <p class="section-desc">
+      我們不是冷冰冰的占卜機器。每一次解讀，都像是與懂你的塔羅師深度對話——
+      AI 記得你說過的每一句話，也懂得適時追問。
+    </p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-item">
+      <span class="feature-icon">✦</span>
+      <h3 class="feature-title">智慧推薦牌陣</h3>
+      <p class="feature-desc">你只需說出問題，AI 自動選擇最適合的牌陣。不需要懂塔羅知識，也能獲得深度解讀。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">◎</span>
+      <h3 class="feature-title">持續對話追問</h3>
+      <p class="feature-desc">解讀結束後還可以繼續問。AI 記得整個對話脈絡，回答不斷裂、不重複。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">◇</span>
+      <h3 class="feature-title">深淺解讀自選</h3>
+      <p class="feature-desc">忙碌時選快速解讀，重要時刻切換深度模式。同一張牌，看的深度不同，洞見就不同。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">♡</span>
+      <h3 class="feature-title">六位風格迥異的塔羅師</h3>
+      <p class="feature-desc">溫柔療癒師、神秘哲學家、幽默智者……找到和你頻率相合的那一位。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">◈</span>
+      <h3 class="feature-title">自訂塔羅師形象</h3>
+      <p class="feature-desc">用 AI 生成你的專屬塔羅師，自訂性格、解讀風格、甚至外型，打造獨一無二的體驗。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">☯</span>
+      <h3 class="feature-title">療癒心靈聊天室</h3>
+      <p class="feature-desc">不只是占卜，當你需要被傾聽的時候，溫柔的露娜陪你梳理情緒，找回內在平靜。</p>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section>
+  <p class="section-label">占卜工具</p>
+  <h2 class="section-title">選擇你的<em>占卜方式</em></h2>
+
+  <div class="services-grid">
+    <div class="service-card" onclick="scrollToSection('ask')">
+      <span class="service-tag">感情 · 關係</span>
+      <h3 class="service-name">愛情塔羅</h3>
+      <p class="service-desc">他對你的真實想法是什麼？感情的走向如何？讓塔羅帶你看清曖昧中的訊號。</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card" onclick="scrollToSection('ask')">
+      <span class="service-tag">快速 · 直覺</span>
+      <h3 class="service-name">是否塔羅</h3>
+      <p class="service-desc">只需問一個是非題，牌會給你最直接的回答。猶豫不決的時候，就交給牌吧。</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card" onclick="scrollToSection('ask')">
+      <span class="service-tag">決策 · 選擇</span>
+      <h3 class="service-name">二擇一 / 三擇一牌陣</h3>
+      <p class="service-desc">面對人生交叉路口，讓牌揭示每條道路的能量與可能，幫你看清方向。</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card" onclick="scrollToSection('ask')">
+      <span class="service-tag">靈性 · 指引</span>
+      <h3 class="service-name">神諭卡占卜</h3>
+      <p class="service-desc">和塔羅師凜對話，他會為你創作一張專屬神諭卡，帶給你直覺性的靈性指引。</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card" onclick="scrollToSection('ask')">
+      <span class="service-tag">完整 · 深度</span>
+      <h3 class="service-name">凱爾特十字牌陣</h3>
+      <p class="service-desc">塔羅經典中的經典。十張牌完整呈現你的處境、潛意識、過去影響與未來走向。</p>
+      <span class="service-arrow">↗</span>
+    </div>
+    <div class="service-card" onclick="scrollToSection('ask')">
+      <span class="service-tag">目標 · 顯化</span>
+      <h3 class="service-name">塔羅顯化</h3>
+      <p class="service-desc">用塔羅牌作為每日視覺錨點，設定意圖、專注當下，讓願望一步步成真。</p>
+      <span class="service-arrow">↗</span>
+    </div>
+  </div>
+</section>
+
+<!-- FORTUNE -->
+<section class="fortune-section" id="fortune">
+  <div class="fortune-header">
+    <div>
+      <p class="section-label">塔羅運勢</p>
+      <h2 class="section-title">掌握每個<em>時刻</em>的指引</h2>
+    </div>
+    <p class="section-desc">從今日到整年，用不同尺度的時間維度洞察你的運勢走向，提前感知機遇與挑戰。</p>
+  </div>
+  <div class="fortune-grid">
+    <div class="fortune-item" onclick="openFortune('daily')">
+      <p class="fortune-period">Daily · 今日</p>
+      <h3 class="fortune-name">每日塔羅</h3>
+      <p class="fortune-desc">每天一張牌，感知今日的能量流動與生活指引。</p>
+      <p class="fortune-cta">抽今日牌 →</p>
+    </div>
+    <div class="fortune-item" onclick="openFortune('monthly')">
+      <p class="fortune-period">Monthly · 本月</p>
+      <h3 class="fortune-name">月運占卜</h3>
+      <p class="fortune-desc">三張牌分別指引上中下旬，掌握一個月的節奏。</p>
+      <p class="fortune-cta">查看月運 →</p>
+    </div>
+    <div class="fortune-item" onclick="openFortune('seasonal')">
+      <p class="fortune-period">Seasonal · 四季</p>
+      <h3 class="fortune-name">四季牌陣</h3>
+      <p class="fortune-desc">節氣限定。五張牌揭示整季的靈性課題與運勢。</p>
+      <p class="fortune-cta">查看季運 →</p>
+    </div>
+    <div class="fortune-item" onclick="openFortune('yearly')">
+      <p class="fortune-period">Yearly · 年度</p>
+      <h3 class="fortune-name">年運塔羅</h3>
+      <p class="fortune-desc">洞察 2026 全年走向，把握機遇，應對人生挑戰。</p>
+      <p class="fortune-cta">查看年運 →</p>
+    </div>
+  </div>
+</section>
+
+<!-- FORTUNE MODAL -->
+<div id="fortuneModal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(26,23,20,0.55);backdrop-filter:blur(4px);overflow-y:auto;" onclick="closeFortune(event)">
+  <div id="fortunePanel" style="background:var(--warm-white);max-width:640px;margin:5vh auto;padding:3rem 2.5rem;position:relative;animation:fadeUp 0.4s ease;">
+    <button onclick="closeFortune(null)" style="position:absolute;top:1.4rem;right:1.6rem;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--dust);">✕</button>
+    <p id="fortuneType" style="font-size:0.65rem;letter-spacing:0.24em;color:var(--sage);text-transform:uppercase;margin-bottom:0.6rem;"></p>
+    <h2 id="fortuneTitle" style="font-family:'DM Serif Display',serif;font-size:1.6rem;font-weight:400;margin-bottom:0.5rem;"></h2>
+    <p id="fortuneSubtitle" style="font-size:0.82rem;color:var(--dust);margin-bottom:2rem;line-height:1.7;font-weight:300;"></p>
+
+    <div id="fortuneCardRow" style="display:flex;gap:0.7rem;flex-wrap:wrap;margin-bottom:1.8rem;"></div>
+
+    <div style="border-top:1px solid var(--accent-line);padding-top:1.6rem;">
+      <p style="font-size:0.65rem;letter-spacing:0.2em;color:var(--terracotta);text-transform:uppercase;margin-bottom:0.9rem;">✦ 運勢解讀</p>
+      <p id="fortuneReading" style="font-size:0.88rem;line-height:2.1;color:var(--ink);font-weight:300;"></p>
+    </div>
+
+    <button onclick="redrawFortune()" id="redrawBtn" style="margin-top:2rem;padding:0.75rem 1.8rem;background:var(--ink);color:var(--warm-white);border:none;font-family:inherit;font-size:0.8rem;letter-spacing:0.1em;cursor:pointer;">↺ 重新抽牌</button>
+  </div>
+</div>
+
+
+<!-- ASK -->
+<div class="ask-section" id="ask">
+  <div class="ask-left">
+    <p class="section-label">免費體驗</p>
+    <h2 class="section-title">直接說出<br>你的<em>問題</em></h2>
+    <p class="section-desc" style="margin:1rem 0 0">不需要先選牌陣。把你心中的問題告訴塔羅師，越具體越好。</p>
+
+    <div class="ask-input-wrapper">
+      <textarea class="ask-textarea" placeholder="例如：我和現在這個人的感情走向如何？" id="questionInput" oninput="updateCount()"></textarea>
+      <div class="ask-submit">
+        <span class="char-count"><span id="charCount">0</span> / 300</span>
+        <button class="submit-btn" id="submitBtn" onclick="submitQuestion()">✦ 開始解讀</button>
+      </div>
+    </div>
+
+    <!-- 牌陣展示區 -->
+    <div id="cardDisplay" style="display:none; margin-top:1.8rem;">
+      <p style="font-size:0.65rem;letter-spacing:0.22em;color:var(--sage);text-transform:uppercase;margin-bottom:1rem;">本次牌陣</p>
+      <div id="cardRow" style="display:flex;gap:0.8rem;margin-bottom:1.6rem;flex-wrap:wrap;"></div>
+    </div>
+
+    <!-- 解讀結果 -->
+    <div id="resultBox" style="display:none; padding:1.6rem; border:1px solid var(--accent-line); background:var(--warm-white);">
+      <p style="font-size:0.65rem;letter-spacing:0.22em;color:var(--terracotta);text-transform:uppercase;margin-bottom:1rem;">✦ 塔羅解讀</p>
+      <div id="resultText" style="font-size:0.88rem;line-height:2.1;color:var(--ink);font-weight:300;"></div>
+    </div>
+
+    <div class="ask-hint" id="askHint">
+      <p>💡 <strong>提問小技巧</strong>：問題越具體，牌的回應越精準。<br>
+      「我的感情運如何？」→「我和 A 之間，接下來有發展的可能嗎？」</p>
+    </div>
+  </div>
+
+  <div class="ask-right">
+    <p class="section-label">靈感提示</p>
+    <h3 class="section-title" style="font-size:1.4rem;margin-bottom:1.2rem">不知道問什麼？<br>試試這些<em>問題</em></h3>
+
+    <div class="example-questions">
+      <div class="example-q" onclick="fillQuestion(this)">我目前的工作環境對我來說是否適合長期發展？</div>
+      <div class="example-q" onclick="fillQuestion(this)">我和這個人之間的緣分，是否值得繼續投入？</div>
+      <div class="example-q" onclick="fillQuestion(this)">我最近感到迷惘，塔羅想告訴我什麼？</div>
+      <div class="example-q" onclick="fillQuestion(this)">這個月我應該把重心放在哪個方向？</div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <p class="section-label">常見問題</p>
+  <h2 class="section-title">你可能想知道的<em>一切</em></h2>
+
+  <div class="faq-grid">
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          占卜前需要注意什麼？
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>建議找一個安靜的環境，保持平和的心態。明確你想諮詢的問題，抽牌時在心中默唸問題。請記住，塔羅是自我探索與反思的工具，最終的決定權掌握在你自己手中。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          可以對同一個問題重複占卜嗎？
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>不建議短時間內頻繁對同一問題占卜，除非情況有明顯改變。頻繁重複會導致結果不一致，使你更難做出判斷。建議等現況有所變化後再次占卜，給自己清晰的指引方向。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          塔羅牌可以預測未來嗎？
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>塔羅更多是反映當前的能量狀態與未來可能的發展趨勢，而非絕對的命運預測。未來會因為你的行為與選擇而改變。若結果不如預期，思考如何調整方向，這才是塔羅最大的價值。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          AI 塔羅和真人塔羅師有何不同？
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>AI 塔羅可以隨時隨地使用，不受時間地點限制，且能持續追問對話。真人塔羅師則帶有更多直覺性的靈性感知。兩者各有優勢，我們的 AI 塔羅師設計上盡量還原有溫度的對話體驗。</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          占卜有什麼禁忌或限制嗎？
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-a">
+          <p>基於道德考量，我們不回答涉及生命安全、醫療診斷、法律糾紛或金融投資的敏感問題。這類問題請務必諮詢相關專業人士。塔羅主要用於個人成長、自我認知與靈性探索。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="faq-right">
+      <p class="section-label">關於平台</p>
+      <h3>還有其他問題嗎？</h3>
+      <p>我們很樂意為你解答。無論是關於占卜方式、訂閱方案，或是塔羅知識的探索，都歡迎來信聯繫我們。</p>
+      <button class="btn-primary" style="display:inline-flex;border:none;cursor:pointer;font-family:inherit">聯絡我們 →</button>
+      <div style="margin-top:2rem;padding-top:2rem;border-top:1px solid var(--accent-line)">
+        <p style="font-size:0.78rem;color:var(--dust);line-height:1.8;font-weight:300">
+          📚 想深入了解塔羅？<br>
+          前往我們的<strong style="color:var(--terracotta);font-weight:400">部落格</strong>，探索塔羅知識、占卜技巧與深度洞見。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <span class="nav-logo" style="color:var(--cream)">靈<span>語</span>塔羅</span>
+      <p>結合 AI 與塔羅的智慧，陪伴你在人生的每個交叉路口找到屬於自己的答案。免費 · 無需註冊 · 隨時隨地。</p>
+    </div>
+    <div class="footer-col">
+      <h4>占卜服務</h4>
+      <ul>
+        <li><a href="javascript:void(0)">AI 塔羅占卜</a></li>
+        <li><a href="javascript:void(0)">是否塔羅</a></li>
+        <li><a href="javascript:void(0)">愛情塔羅</a></li>
+        <li><a href="javascript:void(0)">神諭卡</a></li>
+        <li><a href="javascript:void(0)">塔羅顯化</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>運勢查詢</h4>
+      <ul>
+        <li><a href="javascript:void(0)">每日塔羅</a></li>
+        <li><a href="javascript:void(0)">月運占卜</a></li>
+        <li><a href="javascript:void(0)">四季牌陣</a></li>
+        <li><a href="javascript:void(0)">年運塔羅</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>更多</h4>
+      <ul>
+        <li><a href="javascript:void(0)">塔羅部落格</a></li>
+        <li><a href="javascript:void(0)">會員訂閱</a></li>
+        <li><a href="javascript:void(0)">聯絡我們</a></li>
+        <li><a href="javascript:void(0)">隱私政策</a></li>
+        <li><a href="javascript:void(0)">服務條款</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 靈語塔羅 · 版權所有</p>
+    <div class="footer-lang">
+      <a href="javascript:void(0)">繁中</a>
+      <a href="javascript:void(0)">EN</a>
+      <a href="javascript:void(0)">日本語</a>
+      <a href="javascript:void(0)">한국어</a>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+  // ── Smooth scroll ──
+  function scrollToSection(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── Mobile menu ──
+  function toggleMenu() {
+    document.getElementById('mobileMenu').classList.toggle('active');
+  }
+
+  // ── FAQ accordion ──
+  function toggleFaq(btn) {
+    const item = btn.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // ── Char count ──
+  function updateCount() {
+    document.getElementById('charCount').textContent =
+      document.getElementById('questionInput').value.length;
+  }
+
+  // ── Fill example question ──
+  function fillQuestion(el) {
+    const input = document.getElementById('questionInput');
+    input.value = el.textContent.trim();
+    updateCount();
+    scrollToSection('ask');
+    input.focus();
+  }
+
+  // ── Tarot card data ──
+  const tarotCards = [
+    { name:'愚者',    symbol:'☽', roman:'0'     },
+    { name:'魔術師',  symbol:'✦', roman:'I'     },
+    { name:'女祭司',  symbol:'◎', roman:'II'    },
+    { name:'女皇',    symbol:'♡', roman:'III'   },
+    { name:'皇帝',    symbol:'◈', roman:'IV'    },
+    { name:'教皇',    symbol:'☯', roman:'V'     },
+    { name:'戀人',    symbol:'♡', roman:'VI'    },
+    { name:'戰車',    symbol:'◇', roman:'VII'   },
+    { name:'力量',    symbol:'★', roman:'VIII'  },
+    { name:'隱士',    symbol:'◎', roman:'IX'    },
+    { name:'命運之輪',symbol:'◈', roman:'X'     },
+    { name:'正義',    symbol:'⊕', roman:'XI'    },
+    { name:'倒吊人',  symbol:'☽', roman:'XII'   },
+    { name:'死神',    symbol:'✦', roman:'XIII'  },
+    { name:'節制',    symbol:'◇', roman:'XIV'   },
+    { name:'惡魔',    symbol:'◈', roman:'XV'    },
+    { name:'高塔',    symbol:'★', roman:'XVI'   },
+    { name:'星星',    symbol:'★', roman:'XVII'  },
+    { name:'月亮',    symbol:'☽', roman:'XVIII' },
+    { name:'太陽',    symbol:'☀', roman:'XIX'   },
+    { name:'審判',    symbol:'☯', roman:'XX'    },
+    { name:'世界',    symbol:'◎', roman:'XXI'   },
+  ];
+
+
+  // ── AI 解讀（呼叫後端） ──
+  async function fetchReading({ question, cards, mode, cardLabels }) {
+    const res = await fetch('/api/reading', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, cards, mode, cardLabels })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'API error');
+    return data.reading;
+  }
+
+  function drawCards(n) {
+    return [...tarotCards]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, n)
+      .map(c => ({ ...c, rev: Math.random() > 0.65 }));
+  }
+
+  function buildCardEl(card, label) {
+    const el = document.createElement('div');
+    el.style.cssText = `flex:1;min-width:76px;max-width:110px;border:1px solid var(--accent-line);
+      background:var(--warm-white);text-align:center;padding:1rem 0.5rem;
+      opacity:0;transform:translateY(10px);transition:opacity 0.5s ease,transform 0.5s ease;`;
+    el.innerHTML = `
+      <div style="font-size:1.3rem;opacity:0.6;margin-bottom:0.25rem;">${card.symbol}</div>
+      <div style="font-size:0.56rem;color:var(--gold);letter-spacing:0.1em;margin-bottom:0.25rem;">${card.roman}</div>
+      <div style="font-size:0.73rem;color:var(--ink);">${card.name}</div>
+      ${card.rev ? `<div style="font-size:0.56rem;color:var(--blush);margin-top:0.2rem;">逆位</div>` : ''}
+      <div style="font-size:0.58rem;color:var(--dust);margin-top:0.5rem;padding-top:0.4rem;
+        border-top:1px solid var(--accent-line);letter-spacing:0.04em;">${label}</div>`;
+    return el;
+  }
+
+  function typeWriter(el, text, speed) {
+    el.textContent = '';
+    let i = 0;
+    return new Promise(resolve => {
+      const t = setInterval(() => {
+        if (i < text.length) { el.textContent += text[i++]; }
+        else { clearInterval(t); resolve(); }
+      }, speed);
+    });
+  }
+
+  // ── 問題占卜 ──
+  async function submitQuestion() {
+    const q = document.getElementById('questionInput').value.trim();
+    if (!q) {
+      const ta = document.getElementById('questionInput');
+      ta.style.borderColor = 'var(--terracotta)';
+      ta.placeholder = '請先輸入你的問題 ✦';
+      setTimeout(() => { ta.style.borderColor = ''; ta.placeholder = '例如：我和現在這個人的感情走向如何？'; }, 2000);
+      return;
+    }
+
+    const btn      = document.getElementById('submitBtn');
+    const cardDisp = document.getElementById('cardDisplay');
+    const cardRow  = document.getElementById('cardRow');
+    const resultBox= document.getElementById('resultBox');
+    const resultTxt= document.getElementById('resultText');
+    const hint     = document.getElementById('askHint');
+
+    btn.disabled = true;
+    btn.textContent = '✦ 感應牌義中…';
+    cardDisp.style.display = 'none';
+    resultBox.style.display = 'none';
+    hint.style.display = 'none';
+
+    await new Promise(r => setTimeout(r, 500));
+
+    const labels = ['過去 · 背景', '現在 · 核心', '未來 · 建議'];
+    const cards  = drawCards(3);
+    cardRow.innerHTML = '';
+    cards.forEach((c, i) => cardRow.appendChild(buildCardEl(c, labels[i])));
+    cardDisp.style.display = 'block';
+
+    for (let i = 0; i < cards.length; i++) {
+      await new Promise(r => setTimeout(r, i * 220));
+      cardRow.children[i].style.opacity = '1';
+      cardRow.children[i].style.transform = 'translateY(0)';
+    }
+
+    await new Promise(r => setTimeout(r, 600));
+
+    resultBox.style.display = 'block';
+    resultBox.style.opacity = '0';
+    resultBox.style.transition = 'opacity 0.4s';
+    setTimeout(() => { resultBox.style.opacity = '1'; }, 30);
+    resultTxt.textContent = '正在為你解讀牌義，請稍候…';
+
+    try {
+      const reading = await fetchReading({ question: q, cards, mode: 'question', cardLabels: labels });
+      resultTxt.textContent = '';
+      await typeWriter(resultTxt, reading, 14);
+    } catch {
+      resultTxt.textContent = '解讀暫時無法取得，請稍後再試。';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '✦ 再次解讀';
+    hint.style.display = 'block';
+    setTimeout(() => scrollToSection('ask'), 200);
+  }
+
+  // ── Scroll animation ──
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.feature-item, .service-card, .fortune-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+
+  // ── 運勢 Modal ──
+  const fortuneConfig = {
+    daily:    { type:'Daily · 今日',    title:'每日塔羅', subtitle:'今天的宇宙給你傳遞了什麼訊息？一張牌，感知今日的能量流動。',                     cardCount:1, labels:['今日能量'] },
+    monthly:  { type:'Monthly · 本月',  title:'月運占卜', subtitle:'三張牌指引你上旬、中旬與下旬，掌握整月的能量節奏。',                             cardCount:3, labels:['上旬','中旬','下旬'] },
+    seasonal: { type:'Seasonal · 四季', title:'四季牌陣', subtitle:'五張牌完整呈現這個季節的靈性課題、挑戰與機遇，讓你帶著清醒前行。',               cardCount:5, labels:['季節主題','核心課題','隱藏助力','需要放下','季末收穫'] },
+    yearly:   { type:'Yearly · 2026',   title:'年運塔羅', subtitle:'洞察 2026 全年的能量走向——年度主題、上下半年指引，以及整年的靈性課題。',          cardCount:4, labels:['年度主題','上半年','下半年','年度課題'] },
+  };
+
+  let currentFortuneType = null;
+
+  function openFortune(type) {
+    currentFortuneType = type;
+    const cfg = fortuneConfig[type];
+    document.getElementById('fortuneType').textContent     = cfg.type;
+    document.getElementById('fortuneTitle').textContent    = cfg.title;
+    document.getElementById('fortuneSubtitle').textContent = cfg.subtitle;
+    document.getElementById('fortuneModal').style.display  = 'block';
+    document.body.style.overflow = 'hidden';
+    renderFortune(cfg);
+  }
+
+  async function renderFortune(cfg) {
+    const cardRow   = document.getElementById('fortuneCardRow');
+    const readingEl = document.getElementById('fortuneReading');
+    const redrawBtn = document.getElementById('redrawBtn');
+    cardRow.innerHTML = '';
+    readingEl.textContent = '正在感應牌義，請稍候…';
+    redrawBtn.disabled = true;
+
+    const cards = drawCards(cfg.cardCount);
+    cards.forEach((c, i) => {
+      const el = buildCardEl(c, cfg.labels[i]);
+      cardRow.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }, 80 + i * 180);
+    });
+
+    await new Promise(r => setTimeout(r, 80 + cards.length * 180 + 400));
+
+    try {
+      const reading = await fetchReading({ cards, mode: 'fortune', cardLabels: cfg.labels });
+      readingEl.textContent = '';
+      await typeWriter(readingEl, reading, 13);
+    } catch {
+      readingEl.textContent = '解讀暫時無法取得，請稍後再試。';
+    }
+
+    redrawBtn.disabled = false;
+  }
+
+  function redrawFortune() {
+    if (!currentFortuneType) return;
+    renderFortune(fortuneConfig[currentFortuneType]);
+  }
+
+  function closeFortune(e) {
+    if (e && e.target !== document.getElementById('fortuneModal')) return;
+    document.getElementById('fortuneModal').style.display = 'none';
+    document.body.style.overflow = '';
+    currentFortuneType = null;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeFortune(null);
+  });
+</script>
+</body>
+</html>
