@@ -1463,7 +1463,7 @@
     try {
       const reading = await fetchReading({ question: q, cards, mode: 'question', cardLabels: labels });
       resultTxt.textContent = '';
-      await typeWriter(resultTxt, reading, 14);
+resultTxt.innerHTML = reading.replace(/\n/g, '<br>');
     } catch {
       resultTxt.textContent = '解讀暫時無法取得，請稍後再試。';
     }
@@ -1536,7 +1536,7 @@
     try {
       const reading = await fetchReading({ cards, mode: 'fortune', cardLabels: cfg.labels });
       readingEl.textContent = '';
-      await typeWriter(readingEl, reading, 13);
+      readingEl.innerHTML = reading.replace(/\n/g, '<br>');
     } catch {
       readingEl.textContent = '解讀暫時無法取得，請稍後再試。';
     }
