@@ -1403,16 +1403,17 @@
   }
 
   function typeWriter(el, text, speed) {
-    el.textContent = '';
+    el.innerHTML = '';
     let i = 0;
     return new Promise(resolve => {
       const t = setInterval(() => {
-        if (i < text.length) { el.textContent += text[i++]; }
-        else { clearInterval(t); resolve(); }
+        if (i < text.length) {
+          const ch = text[i++];
+          el.innerHTML += ch === '\n' ? '<br>' : ch;
+        } else { clearInterval(t); resolve(); }
       }, speed);
     });
   }
-
   // ── 問題占卜 ──
   async function submitQuestion() {
     const q = document.getElementById('questionInput').value.trim();
