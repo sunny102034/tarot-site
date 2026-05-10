@@ -1,5 +1,3 @@
-export const maxDuration = 30;
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -13,10 +11,10 @@ module.exports = async function handler(req, res) {
   let prompt = '';
   if (mode === 'fortune') {
     const cardList = cards.map((c, i) => `${cardLabels[i]}：${c.name}${c.rev ? '（逆位）' : ''}`).join('\n');
-    prompt = `你是一位富有靈性與洞察力的塔羅師，風格溫柔而深刻，擅長用優美的繁體中文給予指引。\n\n本次運勢牌陣如下：\n${cardList}\n\n請根據這些牌，給出一段有深度、有溫度的運勢解讀（約200-280字）。解讀中請自然地提及各張牌的名稱與意涵，整合成一段流暢的段落敘述，最後給予一句簡短有力的建議作結。不要使用條列式，用自然的段落書寫。`;
+    prompt = `你是塔羅師，請用繁體中文根據以下牌陣給出150字以內的運勢解讀，用段落敘述，不要條列：\n${cardList}`;
   } else {
     const cardList = cards.map((c, i) => `${cardLabels[i]}：${c.name}${c.rev ? '（逆位）' : ''}`).join('\n');
-    prompt = `你是一位富有靈性與洞察力的塔羅師，風格溫柔而深刻，擅長用優美的繁體中文給予指引。\n\n用戶的問題是：「${question}」\n\n本次抽到的三張牌是：\n${cardList}\n\n請針對這個問題與這三張牌，給出一段有深度、有溫度的塔羅解讀（約200-250字）。解讀中請自然地提及每張牌的名稱，說明它在這個問題上的意涵，再整合成完整回應，最後給予一句有力的靈性建議作結。不要用條列，用流暢的段落敘述。`;
+    prompt = `你是塔羅師，請用繁體中文根據以下問題與牌陣給出150字以內的解讀，用段落敘述，不要條列：\n問題：${question}\n牌陣：\n${cardList}`;
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -29,25 +27,20 @@ module.exports = async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.9,
-          maxOutputTokens: 600
-        }
+        generationConfig: { temperature: 0.9, maxOutputTokens: 400 }
       })
     });
 
-    if (!response.ok) {
-      const err = await response.json();
-      console.error('Gemini error:', JSON.stringify(err));
-      return res.status(500).json({ error: 'Gemini API error' });
-    }
-
     const data = await response.json();
+    console.log('Gemini response:', JSON.stringify(data).slice(0, 500));
+    
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (text) return res.status(200).json({ reading: text });
+    
+    console.error('No text in response:', JSON.stringify(data));
     return res.status(500).json({ error: 'No response from AI' });
   } catch (err) {
-    console.error('Handler error:', err);
+    console.error('Error:', err.message);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
