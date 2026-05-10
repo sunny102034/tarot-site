@@ -11,10 +11,33 @@ module.exports = async function handler(req, res) {
   let prompt = '';
   if (mode === 'fortune') {
     const cardList = cards.map((c, i) => `${cardLabels[i]}：${c.name}${c.rev ? '（逆位）' : ''}`).join('\n');
-    prompt = `你是塔羅師，請用繁體中文根據以下牌陣給出150字以內的運勢解讀，用段落敘述，不要條列：\n${cardList}`;
+    prompt = `你是一位經驗豐富的塔羅師，請用繁體中文針對以下牌陣給出具體的運勢解讀。
+
+牌陣：
+${cardList}
+
+解讀要求：
+- 針對每張牌的具體象徵意義說明，逆位要特別指出其含義的轉變
+- 說明這幾張牌組合在一起對當事人的具體影響
+- 給出實際可行的建議，而非泛泛而談
+- 避免模糊、任何人都能套用的說法
+- 字數約200字，用段落書寫，不要條列`;
   } else {
     const cardList = cards.map((c, i) => `${cardLabels[i]}：${c.name}${c.rev ? '（逆位）' : ''}`).join('\n');
-    prompt = `你是塔羅師，請用繁體中文根據以下問題與牌陣給出150字以內的解讀，用段落敘述，不要條列：\n問題：${question}\n牌陣：\n${cardList}`;
+    prompt = `你是一位經驗豐富的塔羅師，請用繁體中文針對以下問題與牌陣給出具體解讀。
+
+問題：「${question}」
+
+牌陣：
+${cardList}
+
+解讀要求：
+- 直接針對「${question}」這個具體問題來解讀，不要答非所問
+- 針對每張牌在這個問題上的具體意涵說明，逆位要特別指出其影響
+- 說明三張牌的整體訊息對這個問題的回應
+- 最後給出針對這個問題的具體建議或行動方向
+- 避免模糊、任何人都能套用的巴納姆效應式說法
+- 字數約220字，用段落書寫，不要條列`;
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -27,17 +50,13 @@ module.exports = async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.9, maxOutputTokens: 1500 }
+        generationConfig: { temperature: 0.85, maxOutputTokens: 2500 }
       })
     });
-
     const data = await response.json();
-    console.log('Gemini response:', JSON.stringify(data).slice(0, 500));
-    
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (text) return res.status(200).json({ reading: text });
-    
-    console.error('No text in response:', JSON.stringify(data));
+    console.error('Gemini error:', JSON.stringify(data));
     return res.status(500).json({ error: 'No response from AI' });
   } catch (err) {
     console.error('Error:', err.message);
